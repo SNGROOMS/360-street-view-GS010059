@@ -1,9 +1,12 @@
+</head>
+
 <body>
 
 <div id="panorama"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+
 <script>
-    // Get the image name from the URL
     const params = new URLSearchParams(window.location.search);
     const image = params.get("image") || "frame_00001.jpg";
 
@@ -11,8 +14,8 @@
         type: "equirectangular",
         panorama: "images/" + image,
         autoLoad: true,
-        compass: false,
-        showZoomCtrl: true
+        showControls: true,
+        compass: false
     });
 </script>
 
