@@ -1,1 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>360 Street View</title>
 
+<link rel="stylesheet" href="pannellum/pannellum.css"/>
+
+<style>
+html, body {
+  margin: 0;
+  height: 100%;
+  background: black;
+  overflow: hidden;
+}
+
+#panorama {
+  width: 100%;
+  height: 100%;
+}
+
+#controls {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  padding: 10px 14px;
+  border-radius: 10px;
+  z-index: 9999;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
+
+button {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#label {
+  color: white;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div id="controls">
+  <button id="prevButton" onclick="prevFrame()">◀ Prev</button>
+  <button id="nextButton" onclick="nextFrame()">Next ▶</button>
+  <span id="label">Loading...</span>
+</div>
+
+<div id="panorama"></div>
+
+<script src="pannellum/pannellum.js"></script>
+
+<script>
+
+// ============================
+// CONFIG
+// ============================
+
+const BASE = "images/";
+const TOTAL_FRAMES = 308;
+
+
+// ============================
+// GET INPUT FRAME
+// ============================
+
+const params = new URLSearchParams(window.location.search);
+
+let raw =
+  params.get("frame") ||
+  params.get("image") ||
+  "frame_00001";
+
+
+// ============================
+// PARSE FRAME NUMBER
+// ============================
+
+function getFrameNumber(str) {
+  const match = str.match(/frame_(\d+)/);
+  return match ? parseInt(match[1], 10) : 1;
+}
+
+function pad(n) {
+  return String(n).padStart(5, "0");
+}
+
+function makeFrameID(n) {
+  return "frame_" + pad(n);
+}
+
+function makeLabel(n) {
+  return "Frame " + n;
+}
+
+
+// ============================
+// STATE
+// ============================
+
+let frameNum = getFrameNumber(raw);
+let viewer = null;
+
+
+// ============================
+// BUILD IMAGE URL
+// ============================
+
+function buildURL(frameID) {
+  return BASE + frameID + ".jpg?cb=" + Date.now();
+}
+
+
+// ============================
+// UPDATE BUTTONS
+// ============================
+
+function updateButtons() {
+
+  document.getElementById("prevButton").disabled =
+    frameNum <= 1;
+
+  document.getElementById("nextButton").disabled =
+    frameNum >= TOTAL_FRAMES;
+}
+
+
+// ============================
+// CORE RENDER
+// ============================
+
+function render(n, updateURL = true) {
+
+  // Keep frame number inside valid range
+  if (n < 1) n = 1;
+  if (n > TOTAL_FRAMES) n = TOTAL_FRAMES;
+
+  frameNum = n;
+
+  const frameID = makeFrameID(frameNum);
+
+  // Update label
+  document.getElementById("label").innerText =
+    makeLabel(frameNum);
+
+  // Update buttons
+  updateButtons();
+
+  const url = buildURL(frameID);
+
+  // Destroy old viewer safely
+  if (viewer) {
+    try {
+      viewer.destroy();
+    } catch(e) {}
+
+    viewer = null;
+  }
+
+  // Build new viewer
+  setTimeout(() => {
+
+    viewer = pannellum.viewer("panorama", {
+
+      type: "equirectangular",
+
+      panorama: url,
+
+      autoLoad: true,
+
+      showControls: true,
+
+      yaw: 180,
+
+      hfov: 100,
+
+      minHfov: 60,
+
+      maxHfov: 120
+
+    });
+
+  }, 30);
+
+
+  // Keep URL synchronized
+  if (updateURL) {
+
+    const u = new URL(window.location.href);
+
+    u.searchParams.set(
+      "frame",
+      frameID
+    );
+
+    window.history.replaceState(
+      {},
+      "",
+      u.toString()
+    );
+  }
+}
+
+
+// ============================
+// NAVIGATION
+// ============================
+
+function nextFrame() {
+
+  if (frameNum >= TOTAL_FRAMES)
+    return;
+
+  render(frameNum + 1);
+}
+
+
+function prevFrame() {
+
+  if (frameNum <= 1)
+    return;
+
+  render(frameNum - 1);
+}
+
+
+// ============================
+// INIT
+// ============================
+
+function init() {
+
+  // Correct invalid starting frame
+  if (frameNum < 1)
+    frameNum = 1;
+
+  if (frameNum > TOTAL_FRAMES)
+    frameNum = TOTAL_FRAMES;
+
+  render(frameNum, false);
+}
+
+
+init();
+
+</script>
+
+</body>
+</html>
