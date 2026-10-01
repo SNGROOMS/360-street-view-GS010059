@@ -1,14 +1,14 @@
-<body>
+<div id="container"></div>
 
-<div id="panorama"></div>
-
+<script src="pannellum/libpannellum.js"></script>
 <script src="pannellum/pannellum.js"></script>
 
 <script>
     const params = new URLSearchParams(window.location.search);
+
     const image = params.get("image") || "frame_00001.jpg";
 
-    pannellum.viewer("panorama", {
+    pannellum.viewer("container", {
         type: "equirectangular",
         panorama: "images/" + image,
         autoLoad: true,
