@@ -1,20 +1,20 @@
-<div id="container"></div>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>360 Street View</title>
+</head>
 
-<script src="pannellum/libpannellum.js"></script>
-<script src="pannellum/pannellum.js"></script>
+<body>
 
 <script>
     const params = new URLSearchParams(window.location.search);
-
     const image = params.get("image") || "frame_00001.jpg";
 
-    pannellum.viewer("container", {
-        type: "equirectangular",
-        panorama: "images/" + image,
-        autoLoad: true,
-        showControls: true,
-        compass: false
-    });
+    window.location.href =
+        "pannellum/pannellum.htm#panorama=../images/" +
+        encodeURIComponent(image) +
+        "&autoLoad=true";
 </script>
 
 </body>
